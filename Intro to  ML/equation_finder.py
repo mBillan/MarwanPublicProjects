@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow import keras
 
-# This module is based this tutorial
+# The module is on this tutorial
 # https://developers.google.com/codelabs/tensorflow-1-helloworld
 
 # Define the model and the number of layer (units) in the neural network
@@ -29,6 +29,6 @@ model.fit(xs, ys, epochs=500)
 
 # Predict the Y of a given X
 test_x = 10
-print(f"Y({test_x} = {model.predict([test_x])}")
+print(f"Y({test_x}) = {model.predict([test_x])}")
 # Possible output:
-# Y(10 = [[30.999485]]
+# Y(10) = [[30.999485]]
