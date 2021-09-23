@@ -11,12 +11,11 @@ mnist = tf.keras.datasets.fashion_mnist
 # load the training and testing data
 (training_images, training_labels),  (test_images, test_labels) = mnist.load_data()
 
-
 # Normalize the values to be 0-->1 rather than 0-->255
 training_images = training_images/255.0
 test_images = test_images/255.0
 
-# Define the model and the number of layer (units) in the neural network
+# Define the model and the layers (units) in the neural network
 # Each layer has a specific kind of function that tells the neuron how to analyze the data
 # In this case
 #     - The first layer Flattens the data (turns the squared image into one dimensional sequence)
@@ -51,3 +50,4 @@ print(classifications[0])
 print(f"The closest category is: {np.argmax(classifications[0])}")
 
 print(f"The test original label is: {test_labels[0]}")
+
