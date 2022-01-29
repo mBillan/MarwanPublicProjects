@@ -65,7 +65,25 @@ def fibonacci_in_midi(output_midi="musical_fibo_line.mid"):
 
     print("Convert it to midi file")
     sequence_to_midi(chords_sequence=fibo_digits, output_midi=output_midi)
+    
+
+def pi_digits_midi(output_midi="pi_digits.mid"):
+    """
+    Generate a midi musical based on the PI number.
+    Each digit in the number (3.14...) is converted to a note and each note is played separately.
+    Thus, creating a PI melody.
+
+    :param output_midi: The name of the file to save the midi output file in.
+    :return: none
+    """
+    pi = 22/7
+    pi_list = list(f"{pi:.52f}")
+    pi_list.remove('.')
+    print(f"Here are the pi digits: {pi_list}")
+    pi_chords = [Chord([int(digit)]) for digit in pi_list]
+    sequence_to_midi(chords_sequence=pi_chords, output_midi=output_midi)
 
 
 if __name__ == "__main__":
     fibonacci_in_midi()
+    pi_digits_midi()
