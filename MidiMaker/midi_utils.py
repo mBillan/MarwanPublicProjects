@@ -53,13 +53,13 @@ def get_notes_range(key=Note.A.value, scale: Scale = Scale.MAJOR.value):
     return notes
 
 
-def sequence_to_midi(sequence: [Chord], output_midi="sequence.mid", key=Note.A.value, scale: Scale = Scale.MAJOR.value):
+def sequence_to_midi(chords_sequence: [Chord], output_midi="sequence.mid", key=Note.A.value, scale: Scale = Scale.MAJOR.value):
     """
     Generate a midi musical piece according to the given sequence of notes.
 
     :param scale:
     :param key:
-    :param sequence: A list of chords to be played one after another.
+    :param chords_sequence: A list of chords to be played one after another.
         Example: [[1], [5], [2,6], [7,3,5], [0]]
     :param output_midi: The name of the file to save the midi output file in.
     :return: none
@@ -73,8 +73,9 @@ def sequence_to_midi(sequence: [Chord], output_midi="sequence.mid", key=Note.A.v
     delta_ticks = 120
     notes_range = get_notes_range(key=key, scale=scale)
 
-    for chord in range(len(sequence)):
-        notes_to_hit = sequence[chord]  # [notes_range[note] for note in sequence[chord]]
+    for chord in range(len(chords_sequence)):
+        # Put the chords sequence in the allowed notes_range
+        notes_to_hit = [notes_range[note] for note in chords_sequence[chord].notes]
 
         # Hit the notes
         for note in notes_to_hit:

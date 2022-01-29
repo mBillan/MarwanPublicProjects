@@ -4,7 +4,7 @@ Create musicals based on the popular math sequences like: Fibonacci, Prime numbe
 Note: Make sure that you imported the package "mido"
 """
 
-from midi_utils import sequence_to_midi
+from midi_utils import sequence_to_midi, Chord
 
 
 def first_n_fibonaccis(nth_element):
@@ -38,7 +38,7 @@ def numeric_list_to_digits(numeric_list):
     digits_list = []
     for num in numeric_list:
         # Number to a list of it's digits
-        digits = [[int(digit)] for digit in list(str(num))]
+        digits = [Chord([int(digit)]) for digit in list(str(num))]
         digits_list = digits_list + digits
 
     return digits_list
@@ -64,7 +64,7 @@ def fibonacci_in_midi(output_midi="musical_fibo_line.mid"):
     # TODO: Add relevant chords at the beginning of each bar
 
     print("Convert it to midi file")
-    sequence_to_midi(sequence=fibo_digits, output_midi=output_midi)
+    sequence_to_midi(chords_sequence=fibo_digits, output_midi=output_midi)
 
 
 if __name__ == "__main__":

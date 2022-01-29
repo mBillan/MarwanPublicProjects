@@ -5,7 +5,7 @@ Note: Make sure that you imported the package "mido"
 """
 from __future__ import division
 import random
-from midi_utils import sequence_to_midi
+from midi_utils import sequence_to_midi, Chord
 
 
 def get_random_chords(num_of_chords):
@@ -24,7 +24,7 @@ def get_random_chords(num_of_chords):
         notes_range = range(24)
 
         # Randomize from the allowed notes
-        curr_chords = random.choices(notes_range, k=num_of_notes)
+        curr_chords = Chord(random.choices(notes_range, k=num_of_notes))
         chords = chords + [curr_chords]
 
     return chords
@@ -39,8 +39,7 @@ def generate_random_midi(number_of_beats=32, output_midi="random_musical_line.mi
     :return: None
     """
     random_chords = get_random_chords(num_of_chords=number_of_beats)
-    print(random_chords)
-    sequence_to_midi(sequence=random_chords, output_midi=output_midi)
+    sequence_to_midi(chords_sequence=random_chords, output_midi=output_midi)
 
 
 if __name__ == "__main__":

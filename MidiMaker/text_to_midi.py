@@ -2,7 +2,7 @@
 Convert a text to a midi musical file that looks like the Ascii Art of that text
 Note: Make sure that you imported the package "mido"
 """
-from midi_utils import sequence_to_midi
+from midi_utils import sequence_to_midi, Chord
 from pyfiglet import figlet_format
 
 
@@ -44,8 +44,9 @@ def characters_to_chords(rows_of_characters):
     chords = []
     for col in range(len(rows_of_characters[0])):
         # Convert each '#' into the number of the row it's in
-        curr_chord = [[len(rows_of_characters) - row for row in range(len(rows_of_characters)) if rows_of_characters[row][col] == '#']]
-        chords = chords + curr_chord
+        curr_chord = Chord([len(rows_of_characters) - row for row in range(len(rows_of_characters))
+                            if rows_of_characters[row][col] == '#'])
+        chords = chords + [curr_chord]
 
     return chords
 
@@ -60,9 +61,10 @@ def text_to_midi(text="hello world", output_midi="musical_ascii_line.mid"):
     """
     ascii_art_list = text_to_ascii_art(text)
     chords = characters_to_chords(ascii_art_list)
+    for chord in chords:
+        print(chord.notes)
     sequence_to_midi(chords, output_midi=output_midi)
 
 
 if __name__ == "__main__":
     text_to_midi(text="hello world")
-
