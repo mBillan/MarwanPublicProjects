@@ -2,9 +2,7 @@
 Convert a text to a midi musical file that looks like the Ascii Art of that text
 Note: Make sure that you imported the package "mido"
 """
-from mido import Message, MidiFile, MidiTrack
-from midi_utils import get_notes_range
-
+from midi_utils import sequence_to_midi
 from pyfiglet import figlet_format
 
 
@@ -36,37 +34,33 @@ def text_to_ascii_art(text):
     return [list(line) for line in ascii_art.split('\n') if line.strip()]
 
 
+def characters_to_chords(rows_of_characters):
+    """
+    Convert an ascii art list to chords
+
+    :param rows_of_characters: The ascii art represented as a list of lists of characters in ['', '#']
+    :return: List chords based on the given ascii art
+    """
+    chords = []
+    for col in range(len(rows_of_characters[0])):
+        # Convert each '#' into the number of the row it's in
+        curr_chord = [[len(rows_of_characters) - row for row in range(len(rows_of_characters)) if rows_of_characters[row][col] == '#']]
+        chords = chords + curr_chord
+
+    return chords
+
+
 def text_to_midi(text="hello world", output_midi="musical_ascii_line.mid"):
-    outfile = MidiFile()
+    """
+    Convert a text to a midi musical file that looks like the Ascii Art of that text
 
-    track = MidiTrack()
-    outfile.tracks.append(track)
-    track.append(Message('program_change', program=12))
-
-    delta_ticks = 120
+    :param text: The text to convert
+    :param output_midi: The name of the file to save the midi output file in.
+    :return: None
+    """
     ascii_art_list = text_to_ascii_art(text)
-
-    notes_range = get_notes_range()
-
-    for col in range(len(ascii_art_list[0])):
-        # Iterate over the Ascii text columns wise and convert each column to a chord
-
-        # Each special character ('#') represents a note. The row number is the interval from the base note
-        notes_char = [row for row in range(len(ascii_art_list)) if ascii_art_list[row][col] == '#']
-        notes_to_hit = [notes_range[len(notes_range) - note_char - 4] for note_char in notes_char]
-
-        # Hit the notes
-        for note in notes_to_hit:
-            track.append(Message('note_on', note=note, velocity=100, time=0))
-
-        # Configure the pitch of the activated notes
-        track.append(Message('pitchwheel', pitch=60, time=delta_ticks * 2))
-
-        # Release the note
-        for note in notes_to_hit:
-            track.append(Message('note_off', note=note, velocity=100, time=0))
-
-    outfile.save(output_midi)
+    chords = characters_to_chords(ascii_art_list)
+    sequence_to_midi(chords, output_midi=output_midi)
 
 
 if __name__ == "__main__":

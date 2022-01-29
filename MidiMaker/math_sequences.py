@@ -4,8 +4,7 @@ Create musicals based on the popular math sequences like: Fibonacci, Prime numbe
 Note: Make sure that you imported the package "mido"
 """
 
-from midi_utils import get_notes_range
-from mido import Message, MidiFile, MidiTrack
+from midi_utils import sequence_to_midi
 
 
 def first_n_fibonaccis(nth_element):
@@ -39,7 +38,7 @@ def numeric_list_to_digits(numeric_list):
     digits_list = []
     for num in numeric_list:
         # Number to a list of it's digits
-        digits = [int(digit) for digit in list(str(num))]
+        digits = [[int(digit)] for digit in list(str(num))]
         digits_list = digits_list + digits
 
     return digits_list
@@ -54,40 +53,19 @@ def fibonacci_in_midi(output_midi="musical_fibo_line.mid"):
     :param output_midi: The name of the file to save the midi output file in.
     :return: none
     """
-    # TODO: Take the midi building block to the utils file and make it more generic.
-    outfile = MidiFile()
-
-    track = MidiTrack()
-    outfile.tracks.append(track)
-    track.append(Message('program_change', program=12))
-
-    delta_ticks = 120
-    notes_range = get_notes_range()
-
     # Get the first 24 Fibonacci numbers
     fibo_nums = first_n_fibonaccis(24)
+    print(f"Got these Fibonacci elements:{fibo_nums}")
+
     # Convert them into a list of digits
     fibo_digits = numeric_list_to_digits(fibo_nums)
+    print(f"Transform it to a list of chords:{fibo_digits}")
 
-    for col in range(len(fibo_digits)):
-        # Each Fibo digit is a single note played alone.
-        # TODO: Add relevant chords at the beginning of each bar
-        notes_to_hit = [notes_range[fibo_digits[col]]]
+    # TODO: Add relevant chords at the beginning of each bar
 
-        # Hit the notes
-        for note in notes_to_hit:
-            track.append(Message('note_on', note=note, velocity=100, time=0))
-
-        # Configure the pitch of the activated notes
-        track.append(Message('pitchwheel', pitch=60, time=delta_ticks * 2))
-
-        # Release the note
-        for note in notes_to_hit:
-            track.append(Message('note_off', note=note, velocity=100, time=0))
-
-    outfile.save(output_midi)
+    print("Convert it to midi file")
+    sequence_to_midi(sequence=fibo_digits, output_midi=output_midi)
 
 
 if __name__ == "__main__":
     fibonacci_in_midi()
-

@@ -3,6 +3,7 @@ Utility classes, enums and definitions from the musical world that help configur
 
 """
 from enum import Enum
+from mido import Message, MidiFile, MidiTrack
 
 
 class Scale(Enum):
@@ -27,6 +28,14 @@ class Note(Enum):
     G = 67
 
 
+class Chord:
+    def __init__(self, notes=[]):
+        if not all(isinstance(n, int) for n in notes):
+            raise Exception("The notes should all be in their integer representation")
+
+        self.notes = notes
+
+
 def get_notes_range(key=Note.A.value, scale: Scale = Scale.MAJOR.value):
     """
     Gets a valid notes range based on the given key and scale
@@ -42,3 +51,40 @@ def get_notes_range(key=Note.A.value, scale: Scale = Scale.MAJOR.value):
     notes = list(dict.fromkeys(notes))
 
     return notes
+
+
+def sequence_to_midi(sequence: [Chord], output_midi="sequence.mid", key=Note.A.value, scale: Scale = Scale.MAJOR.value):
+    """
+    Generate a midi musical piece according to the given sequence of notes.
+
+    :param scale:
+    :param key:
+    :param sequence: A list of chords to be played one after another.
+        Example: [[1], [5], [2,6], [7,3,5], [0]]
+    :param output_midi: The name of the file to save the midi output file in.
+    :return: none
+    """
+    outfile = MidiFile()
+
+    track = MidiTrack()
+    outfile.tracks.append(track)
+    track.append(Message('program_change', program=12))
+
+    delta_ticks = 120
+    notes_range = get_notes_range(key=key, scale=scale)
+
+    for chord in range(len(sequence)):
+        notes_to_hit = sequence[chord]  # [notes_range[note] for note in sequence[chord]]
+
+        # Hit the notes
+        for note in notes_to_hit:
+            track.append(Message('note_on', note=note, velocity=100, time=0))
+
+        # Configure the pitch of the activated notes
+        track.append(Message('pitchwheel', pitch=60, time=delta_ticks * 2))
+
+        # Release the note
+        for note in notes_to_hit:
+            track.append(Message('note_off', note=note, velocity=100, time=0))
+
+    outfile.save(output_midi)
