@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_metronome/src/widgets.dart';
+import 'package:quiver/async.dart';
 
 // import 'package:fluttertoast/fluttertoast.dart';
 import 'package:select_form_field/select_form_field.dart';
@@ -36,13 +39,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool _isPlaying = false;
-  final _formKey = GlobalKey<FormState>();
-  // TODO: counts on which beat is currently playing.
-  //  should add also a function to calculate and iterate over the BMP
-  int _beatCounter = 0;
+  int tempo = 80;
+  int metre = 4;
+  int _ticksCounter = 0;
 
-  late final TextEditingController _bpmController;
+  late StreamSubscription<DateTime> _subscription;
+
+  final _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _tempoController;
   late final TextEditingController _metreController;
+  List<Widget> _notes = [];
 
   final List<Map<String, dynamic>> _allowedMetres = [
     {
@@ -62,13 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _bpmController = TextEditingController(text: "80");
+    _tempoController = TextEditingController(text: "80");
     _metreController = TextEditingController(text: "4");
   }
 
   @override
   void dispose() {
-    _bpmController.dispose();
+    _tempoController.dispose();
     _metreController.dispose();
     super.dispose();
   }
@@ -77,13 +84,57 @@ class _MyHomePageState extends State<MyHomePage> {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _isPlaying = !_isPlaying;
+        Metronome _metronome =
+            Metronome.epoch(Duration(milliseconds: (60000 / tempo).round()));
+
+        if (_isPlaying) {
+          // Stop the beats stream
+          _subscription.cancel();
+          // Reset the ticks counter
+          _ticksCounter = 0;
+          _notes = [];
+          _isPlaying = false;
+
+          // _bkgColor = Colors.red;
+        } else {
+          _subscription = _metronome.listen((d) {
+            SystemSound.play(SystemSoundType.click);
+            _updateNotes();
+            _ticksCounter++;
+          });
+          _isPlaying = true;
+        }
       });
-      String metronomeStatus = _isPlaying ? "on" : "off";
-      String bpm = _bpmController.text;
-      String metre = _metreController.text + "/4";
-      _showToast(context, "Metronome is $metronomeStatus, BMP: $bpm, Metre: $metre");
     }
+  }
+
+  List<Widget> _updateNotes() {
+    // int metre = int.parse(_metreController.text);
+    int tick = _ticksCounter % metre;
+    print("calling update notes $tick");
+
+    setState(() {
+      if (_notes.isEmpty || metre != _notes.length) {
+        // Reset the whole list of notes since maybe the metre has changed
+        _notes = [];
+        // The first time building the notes widgets
+        for (int i = 0; i < metre; i++) {
+          _notes.add(const Icon(Icons.music_note_outlined,
+              color: Colors.grey, size: 40));
+        }
+      } else {
+        // Color the current note with green
+        if (_ticksCounter != 0) {
+          _notes[(_ticksCounter - 1) % metre] =
+              const Icon(Icons.music_note, color: Colors.green, size: 45);
+        }
+        // Color the previous note with grey
+        _notes[(_ticksCounter - 2) % metre] =
+            const Icon(Icons.music_note_outlined, color: Colors.grey, size: 40);
+      }
+    });
+
+    return _notes;
   }
 
   @override
@@ -118,6 +169,18 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void onTempoChanged(int val) {
+      setState(() {
+        print("Temp is: $val");
+        tempo = int.parse(_tempoController.text);
+      });
+
+      // toggle play twice to update the subscription stream's tempo
+      // and stay in the same playing state
+      _togglePlay();
+      _togglePlay();
+  }
+
   Widget MainBody() {
     return Center(
       // widthFactor: 2,
@@ -131,12 +194,23 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               children: [
                 Text(
-                  'BPM:',
+                  'tempo:',
                   style: Theme.of(context).textTheme.headline4,
                 ),
                 NumericFormField(
-                    controller: _bpmController,
-                    text: "Please enter a valid BPM between 0-320"),
+                    onChanged: (val) {
+                      setState(() {
+                        print("Temp is: $val");
+                        tempo = int.parse(_tempoController.text);
+                      });
+
+                      // toggle play twice to update the subscription stream's tempo
+                      // and stay in the same playing state
+                      _togglePlay();
+                      _togglePlay();
+                    },
+                    controller: _tempoController,
+                    text: "Please enter a valid tempo between 0-320"),
               ],
             ),
             Row(
@@ -155,19 +229,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     // icon: Icon(Icons.format_shapes),
                     labelText: 'Shape',
                     items: _allowedMetres,
-                    onChanged: (val) => print(val),
-                    onSaved: (val) => print(val),
+                    onChanged: (val) => setState(() {
+                      metre = int.parse(_metreController.text);
+                      _updateNotes();
+                    }),
+                    onSaved: (val) => print("Metre saved $val"),
                   ),
                 ),
               ],
             ),
             Row(
-              children: [
-                Text(
-                  'Beats playing',
-                  style: Theme.of(context).textTheme.headline4,
-                ),
-              ],
+              children: _updateNotes(),
             ),
           ],
         ),
@@ -175,40 +247,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-/*
-Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            // The validator receives the text that the user has entered.
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // Validate returns true if the form is valid, or false otherwise.
-                if (_formKey.currentState!.validate()) {
-                  // If the form is valid, display a snackbar. In the real world,
-                  // you'd often call a server or save the information in a database.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processing Data')),
-                  );
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ),
-        ],
-      ),
- */
   void _showToast(BuildContext context, String text) {
     final scaffold = ScaffoldMessenger.of(context);
 
@@ -219,7 +257,7 @@ Form(
         backgroundColor: Colors.lightGreen,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(milliseconds: 1000),
-        width: 200,
+        width: 250,
         // action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
         // elevation: 100,
         // animation: Animation,

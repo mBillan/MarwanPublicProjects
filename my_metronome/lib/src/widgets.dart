@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class NumericFormField extends StatelessWidget{
-  const NumericFormField({Key? key, required this.controller, required this.text}) : super(key: key);
+  const NumericFormField({Key? key, required this.controller, required this.text, this.onChanged}) : super(key: key);
   final TextEditingController controller;
   final String text;
+  final Function(String)? onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: TextFormField(
+        onChanged: (val) => onChanged!(val),
         controller: controller,
         // initialValue: "80",
         maxLength: 3,

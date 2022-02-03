@@ -67,4 +67,4 @@ def text_to_midi(text="hello world", output_midi="musical_ascii_line.mid"):
 
 
 if __name__ == "__main__":
-    text_to_midi(text="hello world")
+    text_to_midi(text="Nameer!")

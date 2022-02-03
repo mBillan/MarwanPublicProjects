@@ -86,4 +86,4 @@ def pi_digits_midi(output_midi="pi_digits.mid"):
 
 if __name__ == "__main__":
     fibonacci_in_midi()
-    pi_digits_midi()
+    # pi_digits_midi()
