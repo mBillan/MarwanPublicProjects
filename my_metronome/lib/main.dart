@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:my_metronome/src/widgets.dart';
 import 'package:quiver/async.dart';
 
-// import 'package:fluttertoast/fluttertoast.dart';
 import 'package:select_form_field/select_form_field.dart';
 
 void main() {
@@ -141,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Text("LOGO"),
+        leading: const Text("LOGO"),
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         actions: [
@@ -169,16 +168,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void onTempoChanged(int val) {
-      setState(() {
-        print("Temp is: $val");
-        tempo = int.parse(_tempoController.text);
-      });
+  void onTempoChanged(double val) {
+    setState(() {
+      tempo = val.round();
+    });
 
-      // toggle play twice to update the subscription stream's tempo
-      // and stay in the same playing state
-      _togglePlay();
-      _togglePlay();
+    // toggle play twice to update the subscription stream's tempo
+    // and stay in the same playing state
+    _togglePlay();
+    _togglePlay();
   }
 
   Widget MainBody() {
@@ -189,30 +187,25 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Form(
         key: _formKey,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            Row(
-              children: [
-                Text(
-                  'tempo:',
-                  style: Theme.of(context).textTheme.headline4,
-                ),
-                NumericFormField(
-                    onChanged: (val) {
-                      setState(() {
-                        print("Temp is: $val");
-                        tempo = int.parse(_tempoController.text);
-                      });
-
-                      // toggle play twice to update the subscription stream's tempo
-                      // and stay in the same playing state
-                      _togglePlay();
-                      _togglePlay();
-                    },
-                    controller: _tempoController,
-                    text: "Please enter a valid tempo between 0-320"),
-              ],
+        Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Tempo is $tempo',
+              style: Theme.of(context).textTheme.headline4,
             ),
+            Slider(
+              value: tempo.toDouble(),
+              onChanged: onTempoChanged,
+              min: 30,
+              max: 360,
+              // autofocus: true,
+              divisions: 330,
+              // label: "$tempo",
+            ),]),
+            // ),
             Row(
               children: [
                 Text(

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class NumericFormField extends StatelessWidget{
-  const NumericFormField({Key? key, required this.controller, required this.text, this.onChanged}) : super(key: key);
+  const NumericFormField({Key? key, required this.controller, required this.text, this.onChanged, this.initialValue}) : super(key: key);
   final TextEditingController controller;
   final String text;
+  final String? initialValue;
   final Function(String)? onChanged;
 
   @override
@@ -13,7 +14,7 @@ class NumericFormField extends StatelessWidget{
       child: TextFormField(
         onChanged: (val) => onChanged!(val),
         controller: controller,
-        // initialValue: "80",
+        initialValue: initialValue,
         maxLength: 3,
         keyboardType: TextInputType.number,
         inputFormatters: <TextInputFormatter>[
