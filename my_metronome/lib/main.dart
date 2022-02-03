@@ -189,38 +189,45 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-        Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Tempo is $tempo',
-              style: Theme.of(context).textTheme.headline4,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: _updateNotes(),
             ),
-            Slider(
-              value: tempo.toDouble(),
-              onChanged: onTempoChanged,
-              min: 30,
-              max: 360,
-              // autofocus: true,
-              divisions: 330,
-              // label: "$tempo",
-            ),]),
+            Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Tempo is $tempo',
+                    style: Theme.of(context).textTheme.headline4,
+                  ),
+                  Slider(
+                    value: tempo.toDouble(),
+                    onChanged: onTempoChanged,
+                    min: 30,
+                    max: 360,
+                    // autofocus: true,
+                    divisions: 330,
+                    // label: "$tempo",
+                  ),
+                ]),
             // ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Metre:',
+                  'Metre is   ',
                   style: Theme.of(context).textTheme.headline4,
                 ),
                 Expanded(
-                  child: SelectFormField(
+                  child:
+                  SelectFormField(
                     controller: _metreController,
                     type: SelectFormFieldType.dropdown,
                     // or can be dialog
                     // initialValue: "4",
                     // by default choose 4/4
                     // icon: Icon(Icons.format_shapes),
-                    labelText: 'Shape',
+                    labelText: 'Choose Metre',
                     items: _allowedMetres,
                     onChanged: (val) => setState(() {
                       metre = int.parse(_metreController.text);
@@ -231,8 +238,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            Row(
-              children: _updateNotes(),
+            const SizedBox(
+              height: 30,
             ),
           ],
         ),
