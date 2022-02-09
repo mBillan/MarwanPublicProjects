@@ -1,11 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:my_metronome/src/widgets.dart';
 import 'package:quiver/async.dart';
-
 import 'package:select_form_field/select_form_field.dart';
+import 'package:audioplayers/audioplayers.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -50,26 +48,22 @@ class _MyHomePageState extends State<MyHomePage> {
   late final TextEditingController _metreController;
   List<Widget> _notes = [];
 
-  final List<Map<String, dynamic>> _allowedMetres = [
-    {
-      'value': 2,
-      'label': '2/4',
-    },
-    {
-      'value': 3,
-      'label': '3/4',
-    },
-    {
-      'value': 4,
-      'label': '4/4',
-    },
-  ];
+  List<Map<String, dynamic>> _allowedMetres = [];
+
+  // AudioPlayers to enable using different beat sounds
+  AudioCache audioCache = AudioCache();
+  AudioPlayer advancedPlayer = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+  String? localFilePath;
+  String? localAudioCacheURI;
+
+
 
   @override
   void initState() {
     super.initState();
     _tempoController = TextEditingController(text: "80");
     _metreController = TextEditingController(text: "4");
+
   }
 
   @override
@@ -77,6 +71,18 @@ class _MyHomePageState extends State<MyHomePage> {
     _tempoController.dispose();
     _metreController.dispose();
     super.dispose();
+  }
+
+  playTicks(String fileName)  async {
+    String soundsDirPath = "/Users/marwanb/Startups/GitHub/projects/my_metronome/assets/sounds";
+    String audioFilePath = "$soundsDirPath/$fileName";
+
+    int result = await advancedPlayer.play(audioFilePath, isLocal:true);
+    if (result == 1) {
+      // success
+    } else {
+      print("Audio file didn't play successfully: $audioFilePath");
+    }
   }
 
   void _togglePlay() {
@@ -97,7 +103,12 @@ class _MyHomePageState extends State<MyHomePage> {
           // _bkgColor = Colors.red;
         } else {
           _subscription = _metronome.listen((d) {
-            SystemSound.play(SystemSoundType.click);
+            // SystemSound.play(SystemSoundType.click);
+            String soundName = (_ticksCounter % metre == 0) ? 'drum_tick.wav' : 'drum_tack.wav';
+            playTicks(soundName);
+            // advancedPlayer.play('sounds/drum_stick.wav');
+            // int res = playTicks();
+            // print("Playing tick status : $res");
             _updateNotes();
             _ticksCounter++;
           });
@@ -110,7 +121,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Widget> _updateNotes() {
     // int metre = int.parse(_metreController.text);
     int tick = _ticksCounter % metre;
-    print("calling update notes $tick");
 
     setState(() {
       if (_notes.isEmpty || metre != _notes.length) {
@@ -119,25 +129,52 @@ class _MyHomePageState extends State<MyHomePage> {
         // The first time building the notes widgets
         for (int i = 0; i < metre; i++) {
           _notes.add(const Icon(Icons.music_note_outlined,
-              color: Colors.grey, size: 40));
+              color: Colors.grey, size: 30));
         }
       } else {
         // Color the current note with green
         if (_ticksCounter != 0) {
           _notes[(_ticksCounter - 1) % metre] =
-              const Icon(Icons.music_note, color: Colors.green, size: 45);
+              const Icon(Icons.music_note, color: Colors.green, size: 35);
         }
         // Color the previous note with grey
         _notes[(_ticksCounter - 2) % metre] =
-            const Icon(Icons.music_note_outlined, color: Colors.grey, size: 40);
+            const Icon(Icons.music_note_outlined, color: Colors.grey, size: 30);
       }
     });
 
     return _notes;
   }
 
+  List<Map<String, dynamic>> _initMetres() {
+    List<Map<String, dynamic>> allowedMetres = [];
+    int maxMetre = 12;
+    for (int currMetre = 2; currMetre <= maxMetre; currMetre++) {
+      allowedMetres.add({
+        'value': currMetre,
+        'label': '$currMetre/4',
+      });
+    }
+
+    return allowedMetres;
+  }
+
+  void _onTempoChanged(double val) {
+    setState(() {
+      tempo = val.round();
+    });
+
+    // toggle play twice to update the subscription stream's tempo
+    // and stay in the same playing state
+    _togglePlay();
+    _togglePlay();
+  }
+
   @override
   Widget build(BuildContext context) {
+    _allowedMetres = _initMetres();
+
+
     return Scaffold(
       appBar: AppBar(
         leading: const Text("LOGO"),
@@ -157,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
           size: 35,
         ),
       ),
-      body: MainBody(),
+      body: mainBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: _togglePlay,
         tooltip: 'Play/Pause',
@@ -168,18 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void onTempoChanged(double val) {
-    setState(() {
-      tempo = val.round();
-    });
-
-    // toggle play twice to update the subscription stream's tempo
-    // and stay in the same playing state
-    _togglePlay();
-    _togglePlay();
-  }
-
-  Widget MainBody() {
+  Widget mainBody() {
     return Center(
       // widthFactor: 2,
       // Center is a layout widget. It takes a single child and positions it
@@ -191,6 +217,8 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
+
+              // mainAxisSize: MainAxisSize.max,
               children: _updateNotes(),
             ),
             Column(
@@ -202,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   Slider(
                     value: tempo.toDouble(),
-                    onChanged: onTempoChanged,
+                    onChanged: _onTempoChanged,
                     min: 30,
                     max: 360,
                     // autofocus: true,
@@ -219,8 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: Theme.of(context).textTheme.headline4,
                 ),
                 Expanded(
-                  child:
-                  SelectFormField(
+                  child: SelectFormField(
                     controller: _metreController,
                     type: SelectFormFieldType.dropdown,
                     // or can be dialog
@@ -228,6 +255,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     // by default choose 4/4
                     // icon: Icon(Icons.format_shapes),
                     labelText: 'Choose Metre',
+
                     items: _allowedMetres,
                     onChanged: (val) => setState(() {
                       metre = int.parse(_metreController.text);
