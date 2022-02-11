@@ -4,7 +4,6 @@ import 'package:quiver/async.dart';
 import 'package:select_form_field/select_form_field.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -56,14 +55,11 @@ class _MyHomePageState extends State<MyHomePage> {
   String? localFilePath;
   String? localAudioCacheURI;
 
-
-
   @override
   void initState() {
     super.initState();
     _tempoController = TextEditingController(text: "80");
     _metreController = TextEditingController(text: "4");
-
   }
 
   @override
@@ -73,16 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  playTicks(String fileName)  async {
-    String soundsDirPath = "/Users/marwanb/Startups/GitHub/projects/my_metronome/assets/sounds";
-    String audioFilePath = "$soundsDirPath/$fileName";
-
-    int result = await advancedPlayer.play(audioFilePath, isLocal:true);
-    if (result == 1) {
-      // success
-    } else {
-      print("Audio file didn't play successfully: $audioFilePath");
-    }
+  playTicks(String audioFileAsset) {
+    // Plays sounds from the assets directory
+    audioCache.play(audioFileAsset).then((player) {
+      if (player.state != PlayerState.PLAYING) {
+        _showToast(context, "Unable to play the sounds");
+      }
+    });
   }
 
   void _togglePlay() {
@@ -104,11 +97,11 @@ class _MyHomePageState extends State<MyHomePage> {
         } else {
           _subscription = _metronome.listen((d) {
             // SystemSound.play(SystemSoundType.click);
-            String soundName = (_ticksCounter % metre == 0) ? 'drum_tick.wav' : 'drum_tack.wav';
-            playTicks(soundName);
-            // advancedPlayer.play('sounds/drum_stick.wav');
-            // int res = playTicks();
-            // print("Playing tick status : $res");
+            String soundName = (_ticksCounter % metre == 0)
+                ? 'drum_tick.wav'
+                : 'drum_tack.wav';
+            playTicks("sounds/$soundName");
+
             _updateNotes();
             _ticksCounter++;
           });
@@ -118,9 +111,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  List<Widget> _updateNotes() {
-    // int metre = int.parse(_metreController.text);
-    int tick = _ticksCounter % metre;
+  List<Widget> _updateNotes({double? maxWidth}) {
+    maxWidth = ((maxWidth != null) ? maxWidth : 400) - 10;
+    double? iconSize = maxWidth / metre;
 
     setState(() {
       if (_notes.isEmpty || metre != _notes.length) {
@@ -128,18 +121,18 @@ class _MyHomePageState extends State<MyHomePage> {
         _notes = [];
         // The first time building the notes widgets
         for (int i = 0; i < metre; i++) {
-          _notes.add(const Icon(Icons.music_note_outlined,
-              color: Colors.grey, size: 30));
+          _notes.add(Icon(Icons.music_note_outlined,
+              color: Colors.grey, size: iconSize));
         }
       } else {
         // Color the current note with green
         if (_ticksCounter != 0) {
           _notes[(_ticksCounter - 1) % metre] =
-              const Icon(Icons.music_note, color: Colors.green, size: 35);
+              Icon(Icons.music_note, color: Colors.green, size: iconSize + 5);
         }
         // Color the previous note with grey
         _notes[(_ticksCounter - 2) % metre] =
-            const Icon(Icons.music_note_outlined, color: Colors.grey, size: 30);
+            Icon(Icons.music_note_outlined, color: Colors.grey, size: iconSize);
       }
     });
 
@@ -170,10 +163,20 @@ class _MyHomePageState extends State<MyHomePage> {
     _togglePlay();
   }
 
+  void _onMetreChanged(String val) {
+    setState(() {
+      metre = int.parse(_metreController.text);
+      _updateNotes();
+    });
+
+    // toggle play twice to reset the metronome
+    _togglePlay();
+    _togglePlay();
+  }
+
   @override
   Widget build(BuildContext context) {
     _allowedMetres = _initMetres();
-
 
     return Scaffold(
       appBar: AppBar(
@@ -215,11 +218,13 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-
-              // mainAxisSize: MainAxisSize.max,
-              children: _updateNotes(),
+            SizedBox(
+              width: 400,
+              height: 40,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _updateNotes(),
+              ),
             ),
             Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -257,10 +262,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     labelText: 'Choose Metre',
 
                     items: _allowedMetres,
-                    onChanged: (val) => setState(() {
-                      metre = int.parse(_metreController.text);
-                      _updateNotes();
-                    }),
+                    onChanged: _onMetreChanged,
                     onSaved: (val) => print("Metre saved $val"),
                   ),
                 ),
