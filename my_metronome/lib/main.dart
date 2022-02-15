@@ -58,22 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String? localFilePath;
   String? localAudioCacheURI;
 
-  @override
-  void initState() {
-    super.initState();
-    _tempoController = TextEditingController(text: "$tempo");
-    _metreController = TextEditingController(text: "$metre");
-    _soundController = TextEditingController(text: sound);
-  }
-
-  @override
-  void dispose() {
-    _tempoController.dispose();
-    _metreController.dispose();
-    _soundController.dispose();
-    super.dispose();
-  }
-
   playTicks(String audioFileAsset) {
     // Plays sounds from the assets directory
     audioCache.play(audioFileAsset).then((player) {
@@ -231,10 +215,26 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _tempoController = TextEditingController(text: "$tempo");
+    _metreController = TextEditingController(text: "$metre");
+    _soundController = TextEditingController(text: sound);
+
     _allowedMetres = _initMetres();
     _availableSounds = _initSounds();
+  }
 
+  @override
+  void dispose() {
+    _tempoController.dispose();
+    _metreController.dispose();
+    _soundController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: const Image(
@@ -271,92 +271,101 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget mainBody() {
-    return Center(
-      // widthFactor: 2,
-      // Center is a layout widget. It takes a single child and positions it
-      // in the middle of the parent.
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            SizedBox(
-              width: 400,
-              height: 40,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _updateNotes(),
+    return Container(
+      // Add a background image
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          opacity: 0.15,
+          image: AssetImage("assets/images/my_metronome_app_logo.png"),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Center(
+        // widthFactor: 2,
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              SizedBox(
+                width: 400,
+                height: 40,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _updateNotes(),
+                ),
               ),
-            ),
-            Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
+              Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Tempo is $tempo',
+                      style: Theme.of(context).textTheme.headline4,
+                    ),
+                    Slider(
+                      value: tempo.toDouble(),
+                      onChanged: _onTempoChanged,
+                      min: 30,
+                      max: 360,
+                      // autofocus: true,
+                      divisions: 330,
+                      // label: "$tempo",
+                    ),
+                  ]),
+              // ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   Text(
-                    'Tempo is $tempo',
+                    'Metre is   ',
                     style: Theme.of(context).textTheme.headline4,
                   ),
-                  Slider(
-                    value: tempo.toDouble(),
-                    onChanged: _onTempoChanged,
-                    min: 30,
-                    max: 360,
-                    // autofocus: true,
-                    divisions: 330,
-                    // label: "$tempo",
-                  ),
-                ]),
-            // ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Metre is   ',
-                  style: Theme.of(context).textTheme.headline4,
-                ),
-                Expanded(
-                  child: SelectFormField(
-                    controller: _metreController,
-                    type: SelectFormFieldType.dropdown,
-                    // or can be dialog
-                    // initialValue: "4",
-                    // by default choose 4/4
-                    // icon: Icon(Icons.format_shapes),
-                    labelText: 'Choose Metre',
+                  Expanded(
+                    child: SelectFormField(
+                      controller: _metreController,
+                      type: SelectFormFieldType.dropdown,
+                      // or can be dialog
+                      // initialValue: "4",
+                      // by default choose 4/4
+                      // icon: Icon(Icons.format_shapes),
+                      labelText: 'Choose Metre',
 
-                    items: _allowedMetres,
-                    onChanged: _onMetreChanged,
-                    onSaved: (val) => print("Metre saved $val"),
+                      items: _allowedMetres,
+                      onChanged: _onMetreChanged,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Sound is   ',
-                  style: Theme.of(context).textTheme.headline4,
-                ),
-                Expanded(
-                  child: SelectFormField(
-                    controller: _soundController,
-                    type: SelectFormFieldType.dropdown,
-                    // or can be dialog
-                    // initialValue: "4",
-                    // by default choose 4/4
-                    // icon: Icon(Icons.format_shapes),
-                    labelText: 'Choose sound',
-                    changeIcon: true,
-                    items: _availableSounds,
-                    onChanged: _onSoundChanged,
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Sound is   ',
+                    style: Theme.of(context).textTheme.headline4,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-          ],
+                  Expanded(
+                    child: SelectFormField(
+                      controller: _soundController,
+                      type: SelectFormFieldType.dropdown,
+                      // or can be dialog
+                      // initialValue: "4",
+                      // by default choose 4/4
+                      // icon: Icon(Icons.format_shapes),
+                      labelText: 'Choose sound',
+                      changeIcon: true,
+                      items: _availableSounds,
+                      onChanged: _onSoundChanged,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+            ],
+          ),
         ),
       ),
     );
