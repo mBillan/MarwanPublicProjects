@@ -37,6 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isPlaying = false;
   int tempo = 80;
   int metre = 4;
+  String sound = "basic";
   int _ticksCounter = 0;
 
   late StreamSubscription<DateTime> _subscription;
@@ -45,9 +46,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   late final TextEditingController _tempoController;
   late final TextEditingController _metreController;
+  late final TextEditingController _soundController;
   List<Widget> _notes = [];
 
   List<Map<String, dynamic>> _allowedMetres = [];
+  List<Map<String, dynamic>> _availableSounds = [];
 
   // AudioPlayers to enable using different beat sounds
   AudioCache audioCache = AudioCache();
@@ -58,14 +61,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _tempoController = TextEditingController(text: "80");
-    _metreController = TextEditingController(text: "4");
+    _tempoController = TextEditingController(text: "$tempo");
+    _metreController = TextEditingController(text: "$metre");
+    _soundController = TextEditingController(text: sound);
   }
 
   @override
   void dispose() {
     _tempoController.dispose();
     _metreController.dispose();
+    _soundController.dispose();
     super.dispose();
   }
 
@@ -98,8 +103,8 @@ class _MyHomePageState extends State<MyHomePage> {
           _subscription = _metronome.listen((d) {
             // SystemSound.play(SystemSoundType.click);
             String soundName = (_ticksCounter % metre == 0)
-                ? 'drum_tick.wav'
-                : 'drum_tack.wav';
+                ? '${sound}_tick.wav'
+                : '${sound}_tack.wav';
             playTicks("sounds/$soundName");
 
             _updateNotes();
@@ -112,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<Widget> _updateNotes({double? maxWidth}) {
-    maxWidth = ((maxWidth != null) ? maxWidth : 400) - 10;
+    maxWidth = ((maxWidth != null) ? maxWidth : 400) - 20;
     double? iconSize = maxWidth / metre;
 
     setState(() {
@@ -152,6 +157,42 @@ class _MyHomePageState extends State<MyHomePage> {
     return allowedMetres;
   }
 
+  List<Map<String, dynamic>> _initSounds() {
+    // TODO: Add only the available sound files under assets/sounds
+
+    List<Map<String, dynamic>> availableSounds = [
+      {
+        'value': 'basic',
+        'label': 'basic',
+
+        // we can also add:
+        // 'icon': const Icon(Icons.sentiment_neutral),
+      },
+      {
+        'value': 'bell',
+        'label': 'bell',
+      },
+      {
+        'value': 'clock',
+        'label': 'clock',
+      },
+      {
+        'value': 'drum',
+        'label': 'drum',
+      },
+      {
+        'value': 'muted',
+        'label': 'muted',
+      },
+      {
+        'value': 'wooden',
+        'label': 'wooden',
+      },
+    ];
+
+    return availableSounds;
+  }
+
   void _onTempoChanged(double val) {
     setState(() {
       tempo = val.round();
@@ -174,28 +215,49 @@ class _MyHomePageState extends State<MyHomePage> {
     _togglePlay();
   }
 
+  void _onSoundChanged(String val) {
+    setState(() {
+      sound = val;
+
+      // Update the value of _soundController manually to sync all the instances
+      // of the widgets that use this controller
+      // mainly because PopupMenuButton doesn't update the have a controller
+      _soundController.text = sound;
+    });
+
+    // toggle play twice to reset the metronome
+    _togglePlay();
+    _togglePlay();
+  }
+
   @override
   Widget build(BuildContext context) {
     _allowedMetres = _initMetres();
+    _availableSounds = _initSounds();
 
     return Scaffold(
       appBar: AppBar(
-        leading: const Text("LOGO"),
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
+        leading: const Image(
+            image: AssetImage('assets/images/my_metronome_app_logo.png')),
+        title: Text(widget.title),
         actions: [
           FloatingActionButton(
-            onPressed: () {
-              _showToast(context, "opening my sounds!");
-            },
-            tooltip: 'Check my sounds',
-            child: const Icon(Icons.music_video_outlined),
+            onPressed: () {},
+            child: PopupMenuButton<String>(
+              onSelected: _onSoundChanged,
+              icon: const Icon(Icons.my_library_music),
+              iconSize: 35,
+              tooltip: "Change sound",
+              itemBuilder: (BuildContext context) {
+                return _availableSounds.map((Map<String, dynamic> element) {
+                  return PopupMenuItem(
+                      value: element['value'].toString(),
+                      child: Text(element['label'].toString()));
+                }).toList();
+              },
+            ),
           ),
         ],
-        title: Text(widget.title),
-        actionsIconTheme: const IconThemeData(
-          size: 35,
-        ),
       ),
       body: mainBody(),
       floatingActionButton: FloatingActionButton(
@@ -264,6 +326,29 @@ class _MyHomePageState extends State<MyHomePage> {
                     items: _allowedMetres,
                     onChanged: _onMetreChanged,
                     onSaved: (val) => print("Metre saved $val"),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Sound is   ',
+                  style: Theme.of(context).textTheme.headline4,
+                ),
+                Expanded(
+                  child: SelectFormField(
+                    controller: _soundController,
+                    type: SelectFormFieldType.dropdown,
+                    // or can be dialog
+                    // initialValue: "4",
+                    // by default choose 4/4
+                    // icon: Icon(Icons.format_shapes),
+                    labelText: 'Choose sound',
+                    changeIcon: true,
+                    items: _availableSounds,
+                    onChanged: _onSoundChanged,
                   ),
                 ),
               ],
