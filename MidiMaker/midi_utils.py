@@ -13,6 +13,7 @@ class Scale(Enum):
     """
     MAJOR = [0, 2, 4, 5, 7, 9, 11, 12]
     MINOR = [0, 2, 3, 5, 7, 8, 10, 12]
+    PENTATONIC = [0, 2, 4, 5, 7, 9]
 
 
 class Note(Enum):
