@@ -319,7 +319,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Metre is   ',
+                    'Metre    ',
                     style: Theme.of(context).textTheme.headline4,
                   ),
                   Expanded(
@@ -342,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Sound is   ',
+                    'Sound    ',
                     style: Theme.of(context).textTheme.headline4,
                   ),
                   Expanded(
