@@ -1,4 +1,4 @@
-package software.mar_tech.fan_cate.fan_cate
+package com.example.fan_cate
 
 import io.flutter.embedding.android.FlutterActivity
 

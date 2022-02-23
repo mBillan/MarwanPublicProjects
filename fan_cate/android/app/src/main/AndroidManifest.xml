@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="software.mar_tech.fan_cate.fan_cate">
+    package="com.example.fan_cate">
    <application
         android:label="fan_cate"
         android:name="${applicationName}"
