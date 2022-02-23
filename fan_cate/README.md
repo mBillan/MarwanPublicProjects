@@ -1,4 +1,3 @@
-@@ -0,0 +1,10 @@
 # fan_cate
 
 The best way to communicate with your fans
